@@ -35,6 +35,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import deepnetwork.math.dVector2;
+import deepnetwork.math.iVector2;
 
 public class VTWindow extends JFrame implements ActionListener, ItemListener, KeyListener, MouseListener{
 	private static final long serialVersionUID = -5090017517481350937L;
@@ -51,13 +52,14 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	public static String trainData_path_preview_text = "Train Data path: ";
 	public static String checkData_path_preview_text = "Check Data path: ";
 	
-	public static String trainData_path = "";
+	public static String trainData_path = "D:\\BalanceBoard\\HiResScreenshots";
 	public static String checkData_path = "";
 	
 	public static ArrayList<File> trainData_loadedImages = new ArrayList<File>();
 	public static ArrayList<File> checkData_loadedImages = new ArrayList<File>();
 	
 	public static BufferedImage image_preview;
+	public static iVector2 image_size = new iVector2(500, 500);
 	public static int image_preview_index = 0;
 	public static int image_preview_list = 0;
 	
@@ -264,7 +266,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			{
 				try
 				{
-					image_preview = ResizeImage(ImageIO.read(trainData_loadedImages.get(imageIndex)), 75, 75);
+					image_preview = ResizeImage(ImageIO.read(trainData_loadedImages.get(imageIndex)), image_size.x, image_size.y);
 					image_preview = ConvertToGreyScale(image_preview);
 					
 					String fileName = trainData_loadedImages.get(imageIndex).getName();
@@ -346,21 +348,22 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		return newImage;
 	}
 	
-	double[][] ConvertToClassicInput(BufferedImage img)	//input created for non-neuralnetwork vision
+	int[][] ConvertToClassicInput(BufferedImage img)	//input created for non-neuralnetwork vision
 	{
-		double[][] input = new double[img.getWidth()][img.getHeight()];
+		int[][] input = new int[img.getWidth()][img.getHeight()];
 		
 		int x = 0, y = 0;
 		while(x < input.length)
 		{
 			while(y < input[0].length)
 			{
+				
 				int rgb = img.getRGB(x, y);
 				int r = (rgb >> 16) & 0xFF;
-				int g = (rgb >> 8) & 0xFF;
-				int b = (rgb & 0xFF);
+				//int g = (rgb >> 8) & 0xFF;
+				//int b = (rgb & 0xFF);
 				
-				input[x][y] = (r + g + b) / 765d;
+				input[x][y] = r;
 				
 				y++;
 			}
@@ -616,7 +619,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		{
 			if(image_preview == null) return;
 			
-			//for(ClassicVision.threshold = 0.01; ClassicVision.threshold < 1; ClassicVision.threshold += 0.01)
+			//for(ClassicVision.threshold = 1; ClassicVision.threshold < 255; ClassicVision.threshold++)
 				network_resultPosition = ClassicVision.GetBallPosition(ConvertToClassicInput(image_preview));
 			
 			UpdateNetworkError();
