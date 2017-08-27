@@ -15,4 +15,10 @@ public class iVector2 {
 	{
 		return "(" + x + "; " + y +")";
 	}
+	
+	public void Set(int arg0, int arg1)
+	{
+		x = arg0;
+		y = arg1;
+	}
 }
