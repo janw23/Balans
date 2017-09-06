@@ -34,6 +34,7 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
+import raspi.camera.CameraController;
 import deepnetwork.math.dVector2;
 import deepnetwork.math.iVector2;
 
@@ -76,6 +77,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	
 	public static int board_preview_realPosition_square_size = 3;
 	
+	//buttons
 	public static Rectangle image_loadImagesButton_rect = new Rectangle(850, 105, 120, 30);
 	public static Rectangle image_nextImageButton_rect = new Rectangle(940, 140, 85, 30);
 	public static Rectangle image_previousImageButton_rect = new Rectangle(850, 140, 85, 30);
@@ -85,6 +87,8 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	public static Rectangle network_trainButton_rect = new Rectangle(50, 395, 120, 30);
 	
 	public static Rectangle network_checkButton_rect = new Rectangle(50, 430, 120, 30);
+	
+	public static Rectangle raspi_takePhotoButton_rect = new Rectangle(50, 465, 120, 30);
 	
 	public VTWindow(String name)
 	{
@@ -211,6 +215,13 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		add(network_check);
 		//network check button end
 		
+		//raspi take photo button start
+		JButton raspi_takePhoto = new JButton("Take Photo");
+		raspi_takePhoto.setBounds(raspi_takePhotoButton_rect);
+		raspi_takePhoto.addActionListener(this);
+		raspi_takePhoto.setActionCommand("RASPI_TAKE_PHOTO");
+		add(raspi_takePhoto);
+		//raspi take photo button end
 	}
 	
 	void LoadImages()
@@ -633,6 +644,19 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			UpdateNetworkError();
 		
 			PaintForArgument(VTPanel.PAINTARG_UPDATE_NETWORK_RESULT);
+		}
+		///////
+		else if(actionName.equals("RASPI_TAKE_PHOTO"))
+		{
+			if(CameraController.camera == null)
+				CameraController.Initialize(new iVector2(500, 500));
+			
+			BufferedImage photo = CameraController.TakePhoto();
+			if(photo != null)
+			{
+				image_preview = photo;
+				PaintForArgument(VTPanel.PAINTARG_UPDATEIMAGE);
+			}
 		}
 		///////
 	}
