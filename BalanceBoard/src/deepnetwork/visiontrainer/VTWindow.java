@@ -35,6 +35,7 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import deepnetwork.math.dVector2;
+import deepnetwork.math.iVector2;
 
 public class VTWindow extends JFrame implements ActionListener, ItemListener, KeyListener, MouseListener{
 	private static final long serialVersionUID = -5090017517481350937L;
@@ -51,13 +52,14 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	public static String trainData_path_preview_text = "Train Data path: ";
 	public static String checkData_path_preview_text = "Check Data path: ";
 	
-	public static String trainData_path = "";
-	public static String checkData_path = "";
+	public static String trainData_path = "D:\\BalanceBoard\\HiResScreenshots";
+	public static String checkData_path = "D:\\BalanceBoard\\HiResCheckScreenshots";
 	
 	public static ArrayList<File> trainData_loadedImages = new ArrayList<File>();
 	public static ArrayList<File> checkData_loadedImages = new ArrayList<File>();
 	
 	public static BufferedImage image_preview;
+	public static iVector2 image_size = new iVector2(500, 500);
 	public static int image_preview_index = 0;
 	public static int image_preview_list = 0;
 	
@@ -186,10 +188,10 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		//previous image button end
 		
 		//network get result button start
-		JButton network_get_result = new JButton("Get Network Result");
+		JButton network_get_result = new JButton("Get CVision Result");//new JButton("Get Network Result");	//networks will be implemented in fiture
 		network_get_result.setBounds(network_getResultButton_rect);
 		network_get_result.addActionListener(this);
-		network_get_result.setActionCommand("GET_NETWORK_RESULT");
+		network_get_result.setActionCommand("GET_CLASSIC_VISION_RESULT");//("GET_NETWORK_RESULT");
 		add(network_get_result);
 		//network get result button end
 		
@@ -202,10 +204,10 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		//network train button end
 		
 		//network check button start
-		JButton network_check = new JButton("Check network");
+		JButton network_check = new JButton("Check CVision");//("Check network");	//networks will be implemented in the future
 		network_check.setBounds(network_checkButton_rect);
 		network_check.addActionListener(this);
-		network_check.setActionCommand("CHECK_NETWORK");
+		network_check.setActionCommand("CHECK_CLASSIC_VISION");//("CHECK_NETWORK");
 		add(network_check);
 		//network check button end
 		
@@ -246,6 +248,9 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	
 	BufferedImage ResizeImage(BufferedImage img, int x, int y)
 	{
+		if(img.getWidth() == x && img.getHeight() == y)
+			return img;
+		
 		Image tmp = img.getScaledInstance(x, y, Image.SCALE_FAST);
 	    BufferedImage dimg = new BufferedImage(x, y, BufferedImage.TYPE_BYTE_GRAY);
 
@@ -264,7 +269,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			{
 				try
 				{
-					image_preview = ResizeImage(ImageIO.read(trainData_loadedImages.get(imageIndex)), 75, 75);
+					image_preview = ResizeImage(ImageIO.read(trainData_loadedImages.get(imageIndex)), image_size.x, image_size.y);
 					image_preview = ConvertToGreyScale(image_preview);
 					
 					String fileName = trainData_loadedImages.get(imageIndex).getName();
@@ -301,7 +306,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			{
 				try
 				{
-					image_preview = ResizeImage(ImageIO.read(checkData_loadedImages.get(imageIndex)), 75, 75);
+					image_preview = ResizeImage(ImageIO.read(checkData_loadedImages.get(imageIndex)), image_size.x, image_size.y);
 					image_preview = ConvertToGreyScale(image_preview);
 					
 					String fileName = checkData_loadedImages.get(imageIndex).getName();
@@ -344,6 +349,32 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		g.dispose();
 		
 		return newImage;
+	}
+	
+	int[][] ConvertToClassicInput(BufferedImage img)	//input created for non-neuralnetwork vision
+	{
+		int[][] input = new int[img.getWidth()][img.getHeight()];
+		
+		int x = 0, y = 0;
+		while(x < input.length)
+		{
+			while(y < input[0].length)
+			{
+				
+				int rgb = img.getRGB(x, y);
+				int r = (rgb >> 16) & 0xFF;
+				//int g = (rgb >> 8) & 0xFF;
+				//int b = (rgb & 0xFF);
+				
+				input[x][y] = r;
+				
+				y++;
+			}
+			y = 0;
+			x++;
+		}
+		
+		return input;
 	}
 	
 	double[] ConvertToNetworkInput(BufferedImage img, int neuronsCount)
@@ -447,8 +478,9 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 
 	public void actionPerformed(ActionEvent e)
 	{
+		String actionName = e.getActionCommand();
 		////////
-		if(e.getActionCommand().equals("SET_TRAINDATA_PATH"))
+		if(actionName.equals("SET_TRAINDATA_PATH"))
 		{
 			int returnVal = fileChooser.showOpenDialog(null);
 			if(returnVal == JFileChooser.APPROVE_OPTION)
@@ -458,7 +490,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			}
 		}
 		////////
-		else if(e.getActionCommand().equals("SET_CHECKDATA_PATH"))
+		else if(actionName.equals("SET_CHECKDATA_PATH"))
 		{
 			int returnVal = fileChooser.showOpenDialog(null);
 			if(returnVal == JFileChooser.APPROVE_OPTION)
@@ -468,18 +500,18 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			}
 		}
 		////////
-		else if(e.getActionCommand().equals("LOAD_IMAGES"))
+		else if(actionName.equals("LOAD_IMAGES"))
 		{
 			LoadImages();
 			if(SetPreviewImage(0, new Random().nextInt(Math.max(1,trainData_loadedImages.size())))) PaintForArgument(VTPanel.PAINTARG_UPDATEIMAGE);
 		}
 		////////
-		else if(e.getActionCommand().equals("NEXT_IMAGE"))
+		else if(actionName.equals("NEXT_IMAGE"))
 		{
 			NextImage();
 		}
 		////////
-		else if(e.getActionCommand().equals("PREVIOUS_IMAGE"))
+		else if(actionName.equals("PREVIOUS_IMAGE"))
 		{
 			if(image_preview_list == 0)
 			{
@@ -495,9 +527,10 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			if(SetPreviewImage(image_preview_list, image_preview_index)) PaintForArgument(VTPanel.PAINTARG_UPDATEIMAGE);
 		}
 		///////
-		else if(e.getActionCommand().equals("GET_NETWORK_RESULT"))	//TEMPORARY
+		else if(actionName.equals("GET_NETWORK_RESULT"))	//TEMPORARY
 		{
-			if(image_preview == null) return;
+			//if(image_preview == null) return;
+			if(true) return;	//networks will be implemented in future
 			
 			network_input = ConvertToNetworkInput(image_preview, VisionTrainer.neurons_in_input_layer);
 			
@@ -508,9 +541,10 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			PaintForArgument(VTPanel.PAINTARG_UPDATE_NETWORK_RESULT);
 		}
 		///////
-		else if(e.getActionCommand().equals("TRAIN_NETWORK"))
+		else if(actionName.equals("TRAIN_NETWORK"))
 		{
-			if(image_preview == null) return;
+			//if(image_preview == null) return;
+			if(true) return;	//networks will be implemented in future
 			
 			ArrayList<Integer> allowedImages = new ArrayList<Integer>();
 			
@@ -579,9 +613,26 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 			PaintForArgument(VTPanel.PAINTARG_UPDATE_NETWORK_RESULT);
 		}
 		///////
-		else if(e.getActionCommand().equals("CHECK_NETWORK"))
+		else if(actionName.equals("CHECK_NETWORK"))
 		{
 			GetErrorOnCheckData();
+		}
+		///////
+		else if(actionName.equals("CHECK_CLASSIC_VISION"))
+		{
+			GetErrorOnClassicCheckData();
+		}
+		///////
+		else if(actionName.equals("GET_CLASSIC_VISION_RESULT"))
+		{
+			if(image_preview == null) return;
+			
+			//for(ClassicVision.threshold = 1; ClassicVision.threshold < 255; ClassicVision.threshold++)
+				network_resultPosition = ClassicVision.GetBallPosition(ConvertToClassicInput(image_preview));
+			
+			UpdateNetworkError();
+		
+			PaintForArgument(VTPanel.PAINTARG_UPDATE_NETWORK_RESULT);
 		}
 		///////
 	}
@@ -645,9 +696,37 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		//System.out.println("Average error on checkData = " + avgError);
 	}
 	
-	public void GetErrorOnCheckData()
+	public void GetErrorOnClassicCheckData()
 	{
 		if(checkData_loadedImages.size() == 0) return;
+				
+		int dataSize = checkData_loadedImages.size();
+		double avgError = 0;
+		double avgTime = 0;
+		
+		for(int i = 0; i < dataSize; i++)
+		{
+			SetPreviewImage(1, i);
+			
+			long t0 = System.nanoTime();
+			network_resultPosition = ClassicVision.GetBallPosition(ConvertToClassicInput(image_preview));
+			avgTime += System.nanoTime() - t0;
+			
+			UpdateNetworkError();
+			
+			avgError += network_distance_error;
+		}
+		
+		avgError /= dataSize;
+		avgTime /= (double)(dataSize);
+		
+		System.out.println("Average error on checkData = " + avgError + "    Average execution time = " + avgTime);
+	}
+	
+	public void GetErrorOnCheckData()
+	{
+		//if(checkData_loadedImages.size() == 0) return;
+		if(true) return;	//networks will be implemented in future
 		
 		int dataSize = checkData_loadedImages.size();
 		double avgError = 0;
@@ -689,8 +768,6 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	{
 		if(SetPreviewImage(0, new Random().nextInt(Math.max(1,trainData_loadedImages.size())))) PaintForArgument(VTPanel.PAINTARG_UPDATEIMAGE);
 	}
-	
-	
 	
 	public void UpdateNetworkError()
 	{

@@ -1,11 +1,11 @@
 package deepnetwork.math;
 
-public class dVector2 {
+public class iVector2 {
 
-	public double x = 0;
-	public double y = 0;
+	public int x = 0;
+	public int y = 0;
 	
-	public dVector2(double arg0, double arg1)
+	public iVector2(int arg0, int arg1)
 	{
 		x = arg0;
 		y = arg1;
@@ -16,7 +16,7 @@ public class dVector2 {
 		return "(" + x + "; " + y +")";
 	}
 	
-	public void Set(double arg0, double arg1)
+	public void Set(int arg0, int arg1)
 	{
 		x = arg0;
 		y = arg1;
