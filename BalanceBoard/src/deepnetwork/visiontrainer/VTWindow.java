@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Hashtable;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Scanner;
@@ -29,16 +30,20 @@ import javax.imageio.ImageIO;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import raspi.camera.CameraController;
 import deepnetwork.math.dVector2;
 import deepnetwork.math.iVector2;
 
-public class VTWindow extends JFrame implements ActionListener, ItemListener, KeyListener, MouseListener{
+public class VTWindow extends JFrame implements ActionListener, ItemListener, KeyListener, MouseListener, ChangeListener{
 	private static final long serialVersionUID = -5090017517481350937L;
 
 	public static VTPanel panel;
@@ -90,6 +95,9 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	
 	public static Rectangle raspi_takePhotoButton_rect = new Rectangle(50, 465, 120, 30);
 	
+	//sliders
+	public static Rectangle classicVision_filterBallRadSlider_rect = new Rectangle(50, 500, 120, 60);
+	
 	public VTWindow(String name)
 	{
 		setTitle(name);
@@ -107,6 +115,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		
 		InitMenu();
 		InitButtons();
+		InitSliders();
 		
 		pack();
 		
@@ -222,6 +231,31 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		raspi_takePhoto.setActionCommand("RASPI_TAKE_PHOTO");
 		add(raspi_takePhoto);
 		//raspi take photo button end
+	}
+	
+	void InitSliders()
+	{
+		//ClassicVision filter ball radius slider start
+		JSlider classicVision_filterBallRadius = new JSlider(JSlider.HORIZONTAL, 2, 7, 5);
+		classicVision_filterBallRadius.setBounds(classicVision_filterBallRadSlider_rect);
+		classicVision_filterBallRadius.setName("SLIDER_CLASSIC_VISION_FILTER_BALL_RADIUS");
+		
+		classicVision_filterBallRadius.setPaintTicks(true);
+		classicVision_filterBallRadius.setPaintTrack(true);
+		classicVision_filterBallRadius.setMajorTickSpacing(7);
+		classicVision_filterBallRadius.setMinorTickSpacing(1);
+		classicVision_filterBallRadius.setPaintLabels(true);
+		
+		Hashtable<Integer, JLabel> classicVision_filterBallRadius_labels = new Hashtable<Integer, JLabel>();
+		classicVision_filterBallRadius_labels.put(2, new JLabel("2"));
+		classicVision_filterBallRadius_labels.put(4, new JLabel("       filter ball radius"));
+		classicVision_filterBallRadius_labels.put(7, new JLabel("7"));
+		
+		classicVision_filterBallRadius.setLabelTable(classicVision_filterBallRadius_labels);
+		
+		classicVision_filterBallRadius.addChangeListener(this);
+		add(classicVision_filterBallRadius);
+		//ClassicVision filter ball radius slider end
 	}
 	
 	void LoadImages()
@@ -840,6 +874,21 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 
 	public void mouseReleased(MouseEvent arg0)
 	{
+		
+	}
+
+	public void stateChanged(ChangeEvent e)
+	{
+		JSlider source = (JSlider) e.getSource();
+		String name = source.getName();
+		
+		if(name.equals("SLIDER_CLASSIC_VISION_FILTER_BALL_RADIUS"))
+		{
+			if(ClassicVision.filter == null)
+				ClassicVision.filter = new Filter(17, source.getValue(), source.getValue() + 1);
+			
+			else ClassicVision.filter = new Filter(ClassicVision.filter.filter_size, source.getValue(), source.getValue() + 1);
+		}
 		
 	}
 	

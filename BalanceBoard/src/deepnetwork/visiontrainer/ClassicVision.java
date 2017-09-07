@@ -49,7 +49,7 @@ public class ClassicVision
 		//SaveImage(input, cmap);
 		
 		if(filter == null)
-			filter = new Filter(15, 5, 6);	//filter's size (odd number), ball radius, square radius
+			filter = new Filter(17, 5, 6);	//filter's size (odd number), ball radius, square radius
 		
 		
 		//double[][] smap = new double[input.length][input[0].length];	//double map of each pixel's score in filter classification
