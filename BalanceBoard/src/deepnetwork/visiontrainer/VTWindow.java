@@ -65,7 +65,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	public static ArrayList<File> checkData_loadedImages = new ArrayList<File>();
 	
 	public static BufferedImage image_preview;
-	public static iVector2 image_size = new iVector2(500, 500);
+	public static iVector2 image_size = new iVector2(250, 250);
 	public static int image_preview_index = 0;
 	public static int image_preview_list = 0;
 	
@@ -94,9 +94,11 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 	public static Rectangle network_checkButton_rect = new Rectangle(50, 430, 120, 30);
 	
 	public static Rectangle raspi_takePhotoButton_rect = new Rectangle(50, 465, 120, 30);
+	public static Rectangle raspi_takeManyPhotosButton_rect = new Rectangle(50, 500, 120, 30);
 	
 	//sliders
-	public static Rectangle classicVision_filterBallRadSlider_rect = new Rectangle(50, 500, 120, 60);
+	public static Rectangle classicVision_filterBallRadSlider_rect = new Rectangle(40, 535, 140, 50);
+	public static Rectangle camera_timeoutSlider_rect = new Rectangle(40, 580, 140, 50);
 	
 	public VTWindow(String name)
 	{
@@ -231,6 +233,14 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		raspi_takePhoto.setActionCommand("RASPI_TAKE_PHOTO");
 		add(raspi_takePhoto);
 		//raspi take photo button end
+		
+		//raspi take many photos button start
+				JButton raspi_takeManyPhotos = new JButton("Take Many Photos");
+				raspi_takeManyPhotos.setBounds(raspi_takeManyPhotosButton_rect);
+				raspi_takeManyPhotos.addActionListener(this);
+				raspi_takeManyPhotos.setActionCommand("RASPI_TAKE_MANY_PHOTOS");
+				add(raspi_takeManyPhotos);
+		//raspi take many photos button end
 	}
 	
 	void InitSliders()
@@ -256,6 +266,21 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		classicVision_filterBallRadius.addChangeListener(this);
 		add(classicVision_filterBallRadius);
 		//ClassicVision filter ball radius slider end
+		
+		//camera timeout slider start
+		JSlider camera_timeout = new JSlider(JSlider.HORIZONTAL, 1, 5001, 5000);
+		camera_timeout.setBounds(camera_timeoutSlider_rect);
+		camera_timeout.setName("SLIDER_CAMERA_TIMEOUT");
+		
+		camera_timeout.setPaintTicks(true);
+		camera_timeout.setPaintTrack(true);
+		camera_timeout.setMajorTickSpacing(1000);
+		camera_timeout.setMinorTickSpacing(500);
+		//camera_timeout.setPaintLabels(true);
+		
+		camera_timeout.addChangeListener(this);
+		add(camera_timeout);
+		//camera timeout slider end
 	}
 	
 	void LoadImages()
@@ -665,7 +690,11 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		///////
 		else if(actionName.equals("CHECK_CLASSIC_VISION"))
 		{
-			GetErrorOnClassicCheckData();
+			//GetErrorOnClassicCheckData();
+			for(int i = 0; i < 100; i++)
+			{
+				NextImage();
+			}
 		}
 		///////
 		else if(actionName.equals("GET_CLASSIC_VISION_RESULT"))
@@ -683,7 +712,7 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 		else if(actionName.equals("RASPI_TAKE_PHOTO"))
 		{
 			if(CameraController.camera == null)
-				CameraController.Initialize(new iVector2(500, 500));
+				CameraController.Initialize(image_size);
 			
 			BufferedImage photo = CameraController.TakePhoto();
 			if(photo != null)
@@ -691,6 +720,32 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 				image_preview = photo;
 				PaintForArgument(VTPanel.PAINTARG_UPDATEIMAGE);
 			}
+		}
+		///////
+		else if(actionName.equals("RASPI_TAKE_MANY_PHOTOS"))
+		{
+			if(CameraController.camera == null)
+				CameraController.Initialize(image_size);
+			
+			Runnable r = new Runnable()
+			{
+				public void run()
+				{
+					for(int i = 0; i < 300; i++)
+					{
+						BufferedImage photo = CameraController.TakePhoto();
+						if(photo != null)
+						{
+							VTWindow.image_preview = photo;
+							VisionTrainer.app_window.PaintForArgument(VTPanel.PAINTARG_UPDATEIMAGE);
+						}
+					}
+					//Thread.currentThread().interrupt();
+				}
+			};
+			
+			Thread t = new Thread(r);
+			t.start();
 		}
 		///////
 	}
@@ -888,6 +943,11 @@ public class VTWindow extends JFrame implements ActionListener, ItemListener, Ke
 				ClassicVision.filter = new Filter(17, source.getValue(), source.getValue() + 1);
 			
 			else ClassicVision.filter = new Filter(ClassicVision.filter.filter_size, source.getValue(), source.getValue() + 1);
+		}
+		else if(name.equals("SLIDER_CAMERA_TIMEOUT"))
+		{
+			if(CameraController.camera != null)
+				CameraController.camera.setTimeout(source.getValue());
 		}
 		
 	}
